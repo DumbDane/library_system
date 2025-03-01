@@ -8,6 +8,11 @@ jobs:
   trigger-pr-workflow:
     runs-on: ubuntu-latest
     steps:
+      - name: Authenticate GitHub CLI
+        run: gh auth status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Find Related PRs
         id: find-prs
         run: |
