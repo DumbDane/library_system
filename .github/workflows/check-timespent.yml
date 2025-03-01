@@ -38,9 +38,9 @@ jobs:
           fi
 
           echo "PR Body: $PR_BODY"
-          echo "$PR_BODY" >> $GITHUB_ENV
           ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#' | tr '\n' ' ')
           echo "Found Issues: $ISSUE_NUMBERS"
+          echo "$PR_NUMBER" >> $GITHUB_ENV
           echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
