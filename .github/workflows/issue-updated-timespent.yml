@@ -1,0 +1,27 @@
+name: Rerun PR Check When Issue is Updated
+
+on:
+  issues:
+    types: [edited]
+
+jobs:
+  trigger-pr-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find Related PRs
+        id: find-prs
+        run: |
+          PRS=$(gh pr list --state open --repo ${{ github.repository }} --json number,body -q '.[] | select(.body | test("#${{ github.event.issue.number }}")) | .number')
+          echo "Related PRs: $PRS"
+          echo "RELATED_PRS=$PRS" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-run PR Workflow
+        if: env.RELATED_PRS != ''
+        run: |
+          for PR in $RELATED_PRS; do
+            gh workflow run verify-timespent.yml --repo ${{ github.repository }} -f pull_request_number="$PR"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
