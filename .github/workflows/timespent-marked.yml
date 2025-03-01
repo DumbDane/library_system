@@ -1,0 +1,39 @@
+name: Check Timespent in Linked Issues
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+jobs:
+  check-timespent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get linked issues
+        id: get-issues
+        run: |
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
+          ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#')
+          echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Timespent in Issues
+        id: check-timespent
+        run: |
+          MISSING_TIMESPENT=""
+          for ISSUE in $ISSUE_NUMBERS; do
+            BODY=$(gh issue view "$ISSUE" --json body -q .body)
+            if echo "$BODY" | grep -q '/Timespent Xh Ym'; then
+              MISSING_TIMESPENT+="$ISSUE "
+            fi
+          done
+          if [ -n "$MISSING_TIMESPENT" ]; then
+            echo "❌ Issues missing updated Timespent: $MISSING_TIMESPENT"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
