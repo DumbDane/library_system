@@ -13,6 +13,7 @@ on:
 jobs:
   check-timespent:
     runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'Updated Timespent') || ${{ github.event.issue.pull_request }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,19 +57,5 @@ jobs:
             
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  re-run-on-comment:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'Updated Timespent')
-    steps:
-      - name: Trigger Timespent Check Workflow
-        run: |
-          PR_NUMBER="${{ github.event.issue.number }}"
-          echo "Re-running Timespent check for PR: $PR_NUMBER"
-          
-          # Re-trigger the workflow
-          gh workflow run verify-timespent.yml --repo ${{ github.repository }} -f pull_request_number="$PR_NUMBER"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
