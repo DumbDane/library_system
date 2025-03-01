@@ -1,0 +1,30 @@
+name: Feature Request
+description: Request a new feature.
+title: "[Feature]: "
+labels: ["enhancement"]
+projects: ["Project 1 Phase 1"]
+assignees:
+  - octocat
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: what-do-you-want?
+    attributes:
+      label: What would you like to see?
+      description: Also tell us, if there is an extended description somewhere
+      placeholder: Tell us what you want!
+      value: "A candyfloss!"
+    validations:
+      required: true
+  - type: textarea
+    id: time-spent
+    attributes:
+      label: Time spent on issue
+      description: How much time did you spend on this issue?
+      placeholder: /Timespent Xh Ym
+      value: "/Timespent Xh Ym"
+    validations:
+      required: true
