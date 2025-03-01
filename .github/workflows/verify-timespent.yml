@@ -22,15 +22,11 @@ jobs:
       - name: Checkout repository (just in case)
         uses: actions/checkout@v4
 
-      - name: Authenticate GitHub CLI
-        run: gh auth status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Get linked issues
         id: get-issues
         run: |
-          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
+          # Use the pull_request_number input passed in workflow_dispatch
+          PR_BODY=$(gh pr view ${{ inputs.pull_request_number }} --repo ${{ github.repository }} --json body -q .body)
           echo "PR Body: $PR_BODY"
           ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#')
           echo "Found Issues: $ISSUE_NUMBERS"
@@ -43,7 +39,7 @@ jobs:
         run: |
           MISSING_TIMESPENT=""
           for ISSUE in $ISSUE_NUMBERS; do
-            BODY=$(gh issue view "$ISSUE" --json body -q .body)
+            BODY=$(gh issue view "$ISSUE" --repo ${{ github.repository }} --json body -q .body)
             if echo "$BODY" | grep -q '/Timespent Xh Ym'; then
               MISSING_TIMESPENT+="#$ISSUE "
             fi
@@ -55,7 +51,7 @@ jobs:
             echo "$COMMENT_BODY"
       
             # Post comment on the PR
-            gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_BODY"
+            gh pr comment ${{ inputs.pull_request_number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
             
             exit 1
           fi
