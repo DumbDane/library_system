@@ -21,7 +21,7 @@ jobs:
         if: env.RELATED_PRS != ''
         run: |
           for PR in $RELATED_PRS; do
-            gh workflow run verify-timespent.yml --repo ${{ github.repository }} -f pull_request_number="$PR"
+            gh workflow run verify-timespent.yml -f pull_request_number="$PR"
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
