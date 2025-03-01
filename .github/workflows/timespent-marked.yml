@@ -30,7 +30,7 @@ jobs:
           echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Check Timespent in Issues
         id: check-timespent
         run: |
@@ -38,14 +38,20 @@ jobs:
           for ISSUE in $ISSUE_NUMBERS; do
             BODY=$(gh issue view "$ISSUE" --repo ${{ github.repository }} --json body -q .body)
             if echo "$BODY" | grep -q '/Timespent Xh Ym'; then
-              MISSING_TIMESPENT+="$ISSUE "
-              gh issue comment "$ISSUE" --repo ${{ github.repository }} --body "❌ This pull request has issues that haven't had their Timespent value updated. Please update $MISSING_TIMESPENT before merging the PR."
+              MISSING_TIMESPENT+="#$ISSUE "
             fi
           done
+      
           if [ -n "$MISSING_TIMESPENT" ]; then
-            echo "❌ Issues missing updated Timespent: $MISSING_TIMESPENT"
+            COMMENT_BODY="❌ The following issues are missing an updated Timespent value: $MISSING_TIMESPENT\n\nPlease update them before merging this PR."
+            echo "$COMMENT_BODY"
+      
+            # Post comment on the PR
+            gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
+            
             exit 1
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
