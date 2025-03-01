@@ -41,7 +41,7 @@ jobs:
           MISSING_TIMESPENT=""
           for ISSUE in $ISSUE_NUMBERS; do
             BODY=$(gh issue view "$ISSUE" --json body -q .body)
-            if ! echo "$BODY" | grep -q '/Timespent Xh Ym'; then
+            if ! echo "$BODY" | grep -qE '/Timespent [0-9]h [1-6]?[0-9]m'; then
               MISSING_TIMESPENT+="#$ISSUE "
             fi
           done
