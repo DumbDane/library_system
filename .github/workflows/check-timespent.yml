@@ -38,6 +38,7 @@ jobs:
           fi
 
           echo "PR Body: $PR_BODY"
+          echo "$PR_BODY" >> $GITHUB_ENV
           ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#' | tr '\n' ' ')
           echo "Found Issues: $ISSUE_NUMBERS"
           echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
@@ -61,7 +62,7 @@ jobs:
             echo "$COMMENT_BODY"
 
             # Post comment on the PR
-            gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
+            gh pr comment $PR_NUMBER --repo ${{ github.repository }} --body "$COMMENT_BODY"
 
             exit 1
           fi
