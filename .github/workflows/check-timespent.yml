@@ -7,32 +7,29 @@ on:
       - edited
       - synchronize
       - reopened
+  issue_comment:
+    types: [created]
 
 jobs:
   check-timespent:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (just in case)
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Get linked issues
         id: get-issues
         run: |
-          # Check if pull_request_number is passed via workflow_dispatch
           PR_NUMBER="${{ github.event.pull_request.number }}"
 
-          # If PR_NUMBER is empty, we fallback to repository context
-          if [ -z "$PR_NUMBER" ]; then
-            echo "No PR number found, using repository context only."
-            PR_BODY=$(gh pr view --repo ${{ github.repository }} --json body -q .body)
-          else
-            echo "Using PR number: $PR_NUMBER"
-            PR_BODY=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json body -q .body)
-          fi
-
+          # Fetch PR body
+          PR_BODY=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json body -q .body)
+          
           echo "PR Body: $PR_BODY"
           ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#' | tr '\n' ' ')
           echo "Found Issues: $ISSUE_NUMBERS"
+          
+          # Export issue numbers and PR number to environment variables
           echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
         env:
@@ -44,21 +41,34 @@ jobs:
           MISSING_TIMESPENT=""
           for ISSUE in $ISSUE_NUMBERS; do
             BODY=$(gh issue view "$ISSUE" --json body -q .body)
-            if echo "$BODY" | grep -q '/Timespent Xh Ym'; then
+            if ! echo "$BODY" | grep -q '/Timespent Xh Ym'; then
               MISSING_TIMESPENT+="#$ISSUE "
             fi
           done
 
           if [ -n "$MISSING_TIMESPENT" ]; then
             COMMENT_BODY="❌ The following issues are missing an updated Timespent value: $MISSING_TIMESPENT
-            Please comment here when you have updated them."
+            Please comment 'Updated Timespent' on this PR when you have updated them."
             echo "$COMMENT_BODY"
-
-            # Request changes on the PR (this blocks the merge)
+            
+            # Post comment on the PR
             gh pr comment $PR_NUMBER --repo ${{ github.repository }} --body "$COMMENT_BODY"
-
+            
             exit 1
-
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  re-run-on-comment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, 'Updated Timespent')
+    steps:
+      - name: Trigger Timespent Check Workflow
+        run: |
+          PR_NUMBER="${{ github.event.issue.number }}"
+          echo "Re-running Timespent check for PR: $PR_NUMBER"
+          
+          # Re-trigger the workflow
+          gh workflow run verify-timespent.yml --repo ${{ github.repository }} -f pull_request_number="$PR_NUMBER"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
