@@ -7,9 +7,6 @@ on:
       - edited
       - synchronize
       - reopened
-  issues:
-    types: [edited]
-
 
 jobs:
   check-timespent:
@@ -26,16 +23,11 @@ jobs:
       - name: Get linked issues
         id: get-issues
         run: |
-          if [[ "${{ github.event_name }}" == "issues" ]]; then
-            echo "Triggered by issue update, finding related PRs..."
-            PRS=$(gh pr list --state open --repo ${{ github.repository }} --json number,body -q '.[] | select(.body | test("#${{ github.event.issue.number }}")) | .number')
-            echo "Related PRs: $PRS"
-            echo "RELATED_PRS=$PRS" >> $GITHUB_ENV
-          else
-            PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json body -q .body)
-            ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#')
-            echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
-          fi
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json body -q .body)
+          echo "PR Body: $PR_BODY"
+          ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -oE '#[0-9]+' | tr -d '#')
+          echo "Found Issues: $ISSUE_NUMBERS"
+          echo "ISSUE_NUMBERS=$ISSUE_NUMBERS" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -49,24 +41,16 @@ jobs:
               MISSING_TIMESPENT+="#$ISSUE "
             fi
           done
-
+      
           if [ -n "$MISSING_TIMESPENT" ]; then
             COMMENT_BODY="❌ The following issues are missing an updated Timespent value: $MISSING_TIMESPENT
             Please update them before merging this PR."
             echo "$COMMENT_BODY"
-
-            # Post comment on the PR(s) that reference the issue
-            if [[ -n "$RELATED_PRS" ]]; then
-              for PR in $RELATED_PRS; do
-                gh pr comment "$PR" --repo ${{ github.repository }} --body "$COMMENT_BODY"
-              done
-            else
-              gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
-            fi
-
+      
+            # Post comment on the PR
+            gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
+            
             exit 1
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
