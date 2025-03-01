@@ -52,6 +52,7 @@ body:
       label: Time spent on issue
       description: How much time did you spend on this issue?
       placeholder: /Timespent Xh Ym
+      value: "/Timespent Xh Ym"
     validations:
       required: true
 
