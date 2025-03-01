@@ -57,6 +57,11 @@ jobs:
             # Request changes on the PR (this blocks the merge)
             gh pr review $PR_NUMBER --repo ${{ github.repository }} --request-changes --body "$COMMENT_BODY"
             
+          else
+            # If Timespent is present, leave an approval (optional)
+            echo "Timespent updated! PR is approved."
+            gh pr review $PR_NUMBER --repo ${{ github.repository }} --approve
+            
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
