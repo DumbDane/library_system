@@ -27,7 +27,7 @@ body:
       options:
         - Main
         - Dev
-      default: Dev
+      default: 1
     validations:
       required: true
   - type: dropdown
