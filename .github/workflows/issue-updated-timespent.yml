@@ -20,7 +20,12 @@ jobs:
       - name: Re-run PR Workflow
         if: env.RELATED_PRS != ''
         run: |
-          for PR in $RELATED_PRS; do
+          # Split RELATED_PRS into an array
+          IFS=$'\n' read -r -d '' -a PR_ARRAY <<< "${{ env.RELATED_PRS }}"
+          
+          # Loop over PR numbers
+          for PR in "${PR_ARRAY[@]}"; do
+            # Run the workflow for each PR
             gh workflow run verify-timespent.yml --repo ${{ github.repository }} -f pull_request_number="$PR"
           done
         env:
