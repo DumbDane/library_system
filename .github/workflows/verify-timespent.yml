@@ -51,7 +51,7 @@ jobs:
             echo "$COMMENT_BODY"
       
             # Post comment on the PR
-            gh pr comment ${{ inputs.pull_request_number }} --repo ${{ github.repository }} --body "$COMMENT_BODY"
+            gh pr comment --repo ${{ github.repository }} ${{ inputs.pull_request_number }} --body "$COMMENT_BODY"
             
             exit 1
           fi
