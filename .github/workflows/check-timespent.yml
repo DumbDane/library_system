@@ -51,7 +51,7 @@ jobs:
 
           if [ -n "$MISSING_TIMESPENT" ]; then
             COMMENT_BODY="❌ The following issues are missing an updated Timespent value: $MISSING_TIMESPENT
-            Please update them before merging this PR."
+            Please comment here when you have updated them."
             echo "$COMMENT_BODY"
 
             # Request changes on the PR (this blocks the merge)
