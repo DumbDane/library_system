@@ -63,15 +63,15 @@ jobs:
 
             # Post comment on the PR
             gh pr comment $PR_NUMBER --repo ${{ github.repository }} --body "$COMMENT_BODY"
-            # Set PR status to failure (this blocks the merge)
-            gh pr check $PR_NUMBER --repo ${{ github.repository }} --status failure --description "Timespent is missing"
 
-            exit 1
-            
+            # Request changes on the PR (this blocks the merge)
+            gh pr review $PR_NUMBER --repo ${{ github.repository }} --request-changes --body "$COMMENT_BODY"
+
           else
-            # If Timespent is present, mark PR status as successful
-            gh pr check $PR_NUMBER --repo ${{ github.repository }} --status success --description "Timespent is updated"
-
+            # If Timespent is present, leave an approval (optional)
+            echo "Timespent updated! PR is approved."
+            gh pr review $PR_NUMBER --repo ${{ github.repository }} --approve
+            
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
